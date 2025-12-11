@@ -3,14 +3,18 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Asset;
+use App\Models\Order;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -21,6 +25,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'balance',
     ];
 
     /**
@@ -44,5 +49,23 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function assets(): HasMany
+    {
+        return $this->hasMany(Asset::class);
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function assetForSymbol(string $symbol): Asset
+    {
+        return $this->assets()->firstOrCreate(
+            ['symbol' => strtoupper($symbol)],
+            ['amount' => 0, 'locked_amount' => 0],
+        );
     }
 }
